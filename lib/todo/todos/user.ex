@@ -7,6 +7,8 @@ defmodule Todo.Todos.User do
     field :email, :string
     field :name, :string
 
+    has_many(:todos, Todo.Todos.Todo, foreign_key: :user_id)
+
     timestamps()
   end
 

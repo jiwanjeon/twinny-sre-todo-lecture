@@ -7,6 +7,7 @@ defmodule Todo.Todos do
   alias Todo.Repo
 
   alias Todo.Todos.User
+  alias Todo.Todos.Todo
 
   @doc """
   Returns the list of users.
@@ -19,6 +20,10 @@ defmodule Todo.Todos do
   """
   def list_users do
     Repo.all(User)
+  end
+
+  def list_todos do
+    Repo.all(Todo)
   end
 
   @doc """
@@ -37,6 +42,8 @@ defmodule Todo.Todos do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  def get_todo!(id), do: Repo.get!(Todo, id)
+
   @doc """
   Creates a user.
 
@@ -49,10 +56,34 @@ defmodule Todo.Todos do
       {:error, %Ecto.Changeset{}}
 
   """
+  # Todo.Todos.create_user(%{age: "30", email: "test@example.com", name: "jiwanjeon"})
   def create_user(attrs \\ %{}) do
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
+  end
+
+  # Todo.Todos.create_todo(%{user_id: 1, title: "title", priority: "HIGH", description: "desc", complete: false, notes: "테스트"})
+  def create_todo(attrs \\ %{}) do
+    %Todo{}
+    |> Todo.changeset(attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, %Todo{} = todo} ->
+        {:ok, get_user_by_id(todo.user_id)}
+    end
+  end
+
+  # Todo.Todos.get_user_by_id(1)
+  def get_user_by_id(user_id) do
+    from(au in associate_related_user(), where: au.id == ^user_id)
+    |> Repo.get(user_id)
+  end
+
+  def associate_related_user() do
+    from(u in User,
+      preload: [todos: ^from(t in Todo)]
+    )
   end
 
   @doc """
@@ -87,6 +118,11 @@ defmodule Todo.Todos do
   """
   def delete_user(%User{} = user) do
     Repo.delete(user)
+  end
+
+  def delete_todo_by_id(todo_id) do
+    from(t in Todo, where: t.id == ^todo_id)
+    |> Repo.delete_all()
   end
 
   @doc """
